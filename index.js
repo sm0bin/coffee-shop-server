@@ -4,6 +4,7 @@ const app = express()
 const port = process.env.PORT || 5500;
 const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
+const ObjectId = require('mongodb').ObjectId;
 
 
 // Middleware
@@ -44,6 +45,39 @@ async function run() {
             res.send(result);
         });
 
+        app.get("/coffees/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await collection.findOne(query);
+            res.send(result);
+        })
+
+        app.put("/coffees/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updatedCoffee = req.body;
+            const coffee = {
+                $set: {
+                    name: updatedCoffee.name,
+                    chef: updatedCoffee.chef,
+                    supplier: updatedCoffee.supplier,
+                    taste: updatedCoffee.taste,
+                    category: updatedCoffee.category,
+                    details: updatedCoffee.details,
+                    photo: updatedCoffee.photo,
+                },
+            };
+            const result = await collection.updateOne(query, coffee, options);
+            res.send(result);
+        })
+
+        app.delete("/coffees/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await collection.deleteOne(query);
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
