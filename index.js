@@ -28,10 +28,11 @@ async function run() {
         await client.connect();
 
         const database = client.db("coffeeStore");
-        const collection = database.collection("coffees");
+        const coffeeCollection = database.collection("coffees");
+        const userCollection = database.collection("users");
 
         app.get("/coffees", async (req, res) => {
-            const cursor = collection.find();
+            const cursor = coffeeCollection.find();
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -40,7 +41,7 @@ async function run() {
             const newCoffee = req.body;
             console.log(newCoffee);
             // const result = await client.db("smStore").collection("coffees").insertOne(newCoffee);
-            const result = await collection.insertOne(newCoffee);
+            const result = await coffeeCollection.insertOne(newCoffee);
             console.log(result);
             res.send(result);
         });
@@ -48,7 +49,7 @@ async function run() {
         app.get("/coffees/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
-            const result = await collection.findOne(query);
+            const result = await coffeeCollection.findOne(query);
             res.send(result);
         })
 
@@ -68,16 +69,51 @@ async function run() {
                     photo: updatedCoffee.photo,
                 },
             };
-            const result = await collection.updateOne(query, coffee, options);
+            const result = await coffeeCollection.updateOne(query, coffee, options);
             res.send(result);
         })
 
         app.delete("/coffees/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
-            const result = await collection.deleteOne(query);
+            const result = await coffeeCollection.deleteOne(query);
             res.send(result);
         })
+
+        app.get("/users", async (req, res) => {
+            const cursor = userCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        app.post("/users", async (req, res) => {
+            const newUser = req.body;
+            console.log(newUser);
+            const result = await userCollection.insertOne(newUser);
+            console.log(result);
+            res.send(result);
+        });
+
+        app.patch("/users", async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email };
+            const updateUser = {
+                $set: {
+                    lastLoggedAt: user.lastLoggedAt
+                },
+            };
+            const result = await userCollection.updateOne(query, updateUser);
+            res.send(result);
+        })
+
+        app.delete("/users/:id", async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const query = { _id: new ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
+        })
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
